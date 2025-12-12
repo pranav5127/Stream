@@ -10,6 +10,7 @@ export default function Index() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [flash, setFlash] = useState<FlashMode>("off");
   const perms = useAppSelector((s) => s.permissions);
+  const FLASH_MODE: FlashMode[] = ["on", "off", "auto"]
 
   if (perms.camera !== "granted") {
     return <View/>;
@@ -20,7 +21,11 @@ export default function Index() {
   }
 
   function toggleFlash() {
-    setFlash((f: FlashMode) => (f === "off" ? "on" : "off"));
+    setFlash((prev: FlashMode) => {
+        const index = FLASH_MODE.indexOf(prev)
+        return FLASH_MODE[(index+1) % FLASH_MODE.length]
+      }
+    );
   }
 
   async function takePicture() {
