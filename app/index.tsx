@@ -5,12 +5,13 @@ import {useAppDispatch, useAppSelector} from "@/store/hooks"
 import MaterialIcons from "@expo/vector-icons/MaterialIcons"
 import {cycleCameraFacing, cycleCameraFlash, cycleCameraMode, enableTorch} from "@/store/cameraSlice"
 import {FlashIcon} from "@/components/FlashIcon";
+import {ShutterButton} from "@/components/ShutterButton";
 
 export default function Index() {
   const cameraRef = useRef<CameraView | null>(null)
   const perms = useAppSelector((s) => s.permissions)
   const dispatch = useAppDispatch()
-  const {facing, flash, mode, torch} = useAppSelector((s) => s.camera)
+  const {facing, flash, mode, torch, flashDisabled} = useAppSelector((s) => s.camera)
 
   if (perms.camera !== "granted") {
     return <View/>
@@ -39,6 +40,7 @@ export default function Index() {
     }
   }
 
+
   return (
     <View style={styles.container}>
       {/* Camera preview */}
@@ -55,7 +57,7 @@ export default function Index() {
       <View style={styles.bottomOverlay} />
 
       {/* Flash toggle button */}
-      <Pressable onPress={toggleFlash} style={styles.flashButton}>
+      <Pressable onPress={toggleFlash} style={styles.flashButton} disabled={flashDisabled}>
         <FlashIcon />
       </Pressable>
 
@@ -90,8 +92,14 @@ export default function Index() {
         <View style={{ width: 48 }} />
 
         {/* Shutter button */}
-        <Pressable onPress={takePicture} style={styles.shutter}>
-          <MaterialIcons name="circle" size={81} color="white" />
+        <Pressable
+          onPress={takePicture}
+          style={({ pressed }) => [
+            styles.shutter,
+            pressed && styles.shutterPressed,
+          ]}
+        >
+          {({ pressed }) => <ShutterButton pressed={pressed} />}
         </Pressable>
 
         {/* Camera facing toggle */}
@@ -135,6 +143,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 10,
     borderRadius: 24,
+  },
+  shutterPressed: {
+    transform: [{ scale: 0.96 }],
+    opacity: 0.9,
   },
   bottomControls: {
     position: "absolute",

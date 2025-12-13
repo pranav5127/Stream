@@ -10,6 +10,7 @@ export interface CameraState {
   flash: CameraFlash
   mode: Mode
   torch: boolean
+  flashDisabled: boolean
 }
 
 const FLASH_MODES: CameraFlash[] = ["on", "off", "auto"]
@@ -19,6 +20,7 @@ const initialState: CameraState = {
   flash: "off",
   mode: "picture",
   torch: false,
+  flashDisabled: false
 }
 
 const cameraSlice = createSlice({
@@ -28,6 +30,13 @@ const cameraSlice = createSlice({
 
     cycleCameraFacing(state) {
       state.facing = state.facing === "back" ? "front" : "back"
+      if(state.facing === "front") {
+        state.flashDisabled = true
+        state.flash = "off"
+        state.torch = false
+      } else {
+        state.flashDisabled = false
+      }
     },
 
     cycleCameraFlash(state) {
@@ -44,6 +53,10 @@ const cameraSlice = createSlice({
 
     enableTorch(state) {
       state.torch = !state.torch
+    },
+
+    disableFlash(state) {
+
     }
 
   }
@@ -53,7 +66,8 @@ export const {
   cycleCameraFacing,
   cycleCameraFlash,
   cycleCameraMode,
-  enableTorch
+  enableTorch,
+  disableFlash
 } = cameraSlice.actions
 
 export default cameraSlice.reducer
