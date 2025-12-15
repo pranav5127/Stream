@@ -1,25 +1,58 @@
+// noinspection JSUnusedGlobalSymbols
+
 import {View, StyleSheet, Pressable, Text} from "react-native"
 import {CameraView} from "expo-camera"
-import {useRef} from "react"
+import {useEffect, useRef} from "react"
 import {useAppDispatch, useAppSelector} from "@/store/hooks"
 import MaterialIcons from "@expo/vector-icons/MaterialIcons"
-import {cycleCameraFacing, cycleCameraFlash, cycleCameraMode, enableTorch, setLatestAsset} from "@/store/cameraSlice"
-import {FlashIcon} from "@/components/FlashIcon";
-import {ShutterButton} from "@/components/ShutterButton";
+import {
+  cycleCameraFacing,
+  cycleCameraFlash,
+  cycleCameraMode,
+  enableTorch,
+  setLatestAsset,
+  tickRecordingTime,
+  startRecording,
+  stopRecording
+} from "@/store/cameraSlice"
 import {setAssets } from "@/services/setAssets";
 import GalleryPreview from "@/components/GalleryPreview";
 import {getAssets} from "@/services/getAssets";
+import FlashIcon from "@/components/FlashIcon";
+import ShutterButton from "@/components/ShutterButton"
+import {RecordingTimer} from "@/components/RecordingTimer";
 
 export default function Index() {
   const cameraRef = useRef<CameraView | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const perms = useAppSelector((s) => s.permissions)
   const dispatch = useAppDispatch()
-  const {facing, flash, mode, torch, flashDisabled} = useAppSelector((s) => s.camera)
+  const {facing, flash, mode, torch, flashDisabled, isRecording} =
+    useAppSelector((s) => s.camera)
+
+  // Video recording timer
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = setInterval(() => {
+        dispatch(tickRecordingTime())
+      }, 1000)
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [isRecording, dispatch])
 
   if (perms.camera !== "granted") {
     return <View/>
   }
 
+  // Switch front and back cameras
   function toggleCamera() {
     dispatch(cycleCameraFacing())
   }
@@ -32,6 +65,7 @@ export default function Index() {
     }
   }
 
+  // Switch between picture and video modes
   function toggleCameraMode() {
     dispatch(cycleCameraMode())
   }
@@ -46,6 +80,29 @@ export default function Index() {
     dispatch(setLatestAsset(assets[0] ?? null))
   }
 
+  async function recordVideo() {
+    if (!cameraRef.current) return
+
+    if (!isRecording) {
+      dispatch(startRecording())
+
+      try {
+        const video = await cameraRef.current.recordAsync()
+
+        if (!video) return
+
+        await setAssets(video.uri)
+
+        const assets = await getAssets()
+        dispatch(setLatestAsset(assets[0] ?? null))
+      } finally {
+        dispatch(stopRecording())
+      }
+    } else {
+      cameraRef.current.stopRecording()
+    }
+  }
+
 
   return (
     <View style={styles.container}>
@@ -58,6 +115,9 @@ export default function Index() {
         flash={flash}
         enableTorch={torch}
       />
+
+      {/* Recording Timer */}
+      <RecordingTimer />
 
       <View style={styles.topOverlay} />
       <View style={styles.bottomOverlay} />
@@ -76,7 +136,7 @@ export default function Index() {
               mode === "picture" && styles.modeActive,
             ]}
           >
-            PHOTO
+            Photo
           </Text>
         </Pressable>
 
@@ -87,7 +147,7 @@ export default function Index() {
               mode === "video" && styles.modeActive,
             ]}
           >
-            VIDEO
+            Video
           </Text>
         </Pressable>
       </View>
@@ -96,9 +156,10 @@ export default function Index() {
       <View style={styles.bottomControls}>
         {/* Spacer */}
         <GalleryPreview />
+
         {/* Shutter button */}
         <Pressable
-          onPress={takePicture}
+          onPress={mode === "video" ? recordVideo : takePicture}
           style={({ pressed }) => [
             styles.shutter,
             pressed && styles.shutterPressed,

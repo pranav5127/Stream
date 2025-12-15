@@ -23,8 +23,8 @@ export default function PermissionsManager() {
     dispatch(setAudioPermission(audioPermission?.granted ? "granted" : "unknown"))
     dispatch(setMediaPermission(mediaPermission?.granted ? "granted" : "unknown"))
 
-    askAllPermissions()
-  }, [])
+    askAllPermissions().then(r => console.log(`permissions granted ${r}`))
+  }, )
 
   const askAllPermissions = async () => {
     try {

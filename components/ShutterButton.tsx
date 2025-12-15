@@ -1,16 +1,16 @@
-import { useAppSelector } from "@/store/hooks";
+import {useAppSelector} from "@/store/hooks";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-export const ShutterButton = ({ pressed }: { pressed: boolean }) => {
-  const { mode } = useAppSelector((s) => s.camera);
+export default function ShutterButton({pressed}: { pressed: boolean }) {
+  const {mode, isRecording} = useAppSelector((s) => s.camera);
 
   // Video
   if (mode === "video") {
     return (
       <MaterialIcons
-        name="circle"
-        size={81}
-        color={pressed ? "#ff8080" : "red"}
+        name={isRecording ? "stop" : "circle"}
+        size={isRecording ? 48 : 81}
+        color={isRecording ? "red" : pressed ? "#ff8080" : "red"}
       />
     )
   }

@@ -14,6 +14,8 @@ export interface CameraState {
   torch: boolean
   flashDisabled: boolean
   latestAsset: LatestAsset
+  isRecording: boolean
+  recordingTime: number
 }
 
 const FLASH_MODES: CameraFlash[] = ["on", "off", "auto"]
@@ -24,7 +26,9 @@ const initialState: CameraState = {
   mode: "picture",
   torch: false,
   flashDisabled: false,
-  latestAsset: null
+  latestAsset: null,
+  isRecording: false,
+  recordingTime: 0
 }
 
 const cameraSlice = createSlice({
@@ -34,7 +38,7 @@ const cameraSlice = createSlice({
 
     cycleCameraFacing(state) {
       state.facing = state.facing === "back" ? "front" : "back"
-      if(state.facing === "front") {
+      if (state.facing === "front") {
         state.flashDisabled = true
         state.flash = "off"
         state.torch = false
@@ -61,8 +65,26 @@ const cameraSlice = createSlice({
 
     setLatestAsset(state, action: PayloadAction<Asset | null>) {
       state.latestAsset = action.payload
-    }
+    },
 
+    startRecording(state) {
+      state.isRecording = true
+      state.recordingTime = 0
+    },
+
+    stopRecording(state) {
+      // This prevents accidental double press
+      if (!state.isRecording) return
+
+      state.isRecording = false
+      state.recordingTime = 0
+    },
+
+    tickRecordingTime(state) {
+      if (state.isRecording) {
+        state.recordingTime += 1
+      }
+    }
   }
 })
 
@@ -71,7 +93,11 @@ export const {
   cycleCameraFlash,
   cycleCameraMode,
   enableTorch,
-  setLatestAsset
+  setLatestAsset,
+  startRecording,
+  stopRecording,
+  tickRecordingTime
+
 } = cameraSlice.actions
 
 export default cameraSlice.reducer

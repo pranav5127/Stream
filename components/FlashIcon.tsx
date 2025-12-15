@@ -2,8 +2,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {useAppSelector} from "@/store/hooks";
 
 
-export const FlashIcon = () => {
-const { flash, mode, torch} = useAppSelector((s) => s.camera)
+export default function FlashIcon() {
+  const {flash, mode, torch} = useAppSelector((s) => s.camera)
 
   if (mode === "video") {
     return torch
