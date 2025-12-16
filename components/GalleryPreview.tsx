@@ -10,7 +10,7 @@ export default function GalleryPreview() {
     return <View style={styles.placeholder} />
   }
 
-  const latest = assets[assets.length - 1]
+  const latest = assets[0]
 
   function openGallery() {
     router.push("/gallery")

@@ -20,5 +20,5 @@ export async function getAssets() {
     ],
   })
 
-  return assets
+  return assets.reverse()
 }
